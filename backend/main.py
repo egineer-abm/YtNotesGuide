@@ -1,7 +1,7 @@
 """
 FastAPI backend application for YouTube-to-Notion Guide Generator.
 """
-
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 
@@ -51,29 +51,24 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware for Streamlit frontend
-# In production (Render), we allow all origins since frontend is a separate service
-# In development, we restrict to localhost
-import os
+# CORS middleware for local development and hosted frontends.
 allowed_origins = [
     "http://localhost:3000",
     "http://localhost:8501",
     "http://127.0.0.1:8501",
 ]
+allow_origin_regex = None
 
-# In production, allow any onrender.com domain
 if os.getenv("RENDER") == "true":
-    allowed_origins.extend([
-        "https://*.onrender.com",
-    ])
-    # Allow from environment variable if set (for specific frontend URL)
+    allow_origin_regex = r"https://.*\.onrender\.com"
     frontend_url = os.getenv("FRONTEND_URL")
     if frontend_url:
-        allowed_origins.append(frontend_url)
+        allowed_origins.append(frontend_url.rstrip("/"))
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

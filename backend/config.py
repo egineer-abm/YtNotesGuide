@@ -43,7 +43,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("backend_host", "BACKEND_HOST")
     )
     backend_port: int = Field(
-        default=8000,
+        default=7860,
         validation_alias=AliasChoices("backend_port", "BACKEND_PORT", "PORT")
     )
     streamlit_port: int = Field(

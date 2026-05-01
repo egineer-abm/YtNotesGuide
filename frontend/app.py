@@ -81,9 +81,6 @@ def main():
     3. Transcribe the selected videos, generate actionable notes, and create Notion pages
     """)
 
-    with st.expander("Show Architecture Diagram"):
-        st.image(FRONTEND_DIR / "assets" / "diagram.png")
-
     api_client = APIClient()
 
     with st.sidebar:

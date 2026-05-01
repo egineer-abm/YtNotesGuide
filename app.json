@@ -1,0 +1,96 @@
+{
+  "name": "YouTube to Notion Guide Generator",
+  "description": "Turn YouTube videos into structured Notion pages with AI-generated guides.",
+  "env": {
+    "NOTION_API_KEY": {
+      "description": "Secret token for Notion integration. Get it from https://www.notion.so/my-integrations.",
+      "value": "",
+      "required": true
+    },
+    "OPENROUTER_API_KEY": {
+      "description": "(Optional) API key for OpenRouter. Required if LLM_PROVIDER is openrouter. Get it from https://openrouter.ai/.",
+      "value": "",
+      "required": false
+    },
+    "GEMINI_API_KEY": {
+      "description": "(Optional) API key for Google Gemini. Required if LLM_PROVIDER is gemini. Get it from Google AI Studio.",
+      "value": "",
+      "required": false
+    },
+    "NOTION_DATABASE_ID": {
+      "description": "(Optional) ID of an existing Notion database. If not provided, the app can create one.",
+      "value": "",
+      "required": false
+    },
+    "LLM_PROVIDER": {
+      "description": "Default AI provider to use: 'openrouter' or 'gemini'.",
+      "value": "openrouter",
+      "required": false
+    },
+    "OPENROUTER_MODEL": {
+      "description": "Specific model to use with OpenRouter (e.g., 'openai/gpt-4o-mini').",
+      "value": "openai/gpt-4o-mini",
+      "required": false
+    },
+    "OPENROUTER_BASE_URL": {
+      "description": "Base URL for the OpenRouter API.",
+      "value": "https://openrouter.ai/api/v1",
+      "required": false
+    },
+    "OPENROUTER_SITE_URL": {
+      "description": "Site URL for OpenRouter (for display purposes).",
+      "value": "http://localhost",
+      "required": false
+    },
+    "OPENROUTER_APP_NAME": {
+      "description": "Application name for OpenRouter (for display purposes).",
+      "value": "YouTube-to-Notion Guide Generator",
+      "required": false
+    },
+    "GEMINI_MODEL": {
+      "description": "Specific model to use with Gemini (e.g., 'gemini-2.5-flash').",
+      "value": "gemini-2.5-flash",
+      "required": false
+    },
+    "GEMINI_BASE_URL": {
+      "description": "Base URL for the Gemini API.",
+      "value": "https://generativelanguage.googleapis.com/v1beta",
+      "required": false
+    },
+    "MAX_VIDEOS_PER_CHANNEL": {
+      "description": "Maximum number of videos to fetch per YouTube channel.",
+      "value": "5",
+      "required": false
+    },
+    "MAX_CONCURRENT_VIDEOS": {
+      "description": "Maximum number of videos to process concurrently.",
+      "value": "3",
+      "required": false
+    },
+    "MAX_TOKENS_PER_CHUNK": {
+      "description": "Maximum tokens per chunk when processing transcripts for LLM.",
+      "value": "30000",
+      "required": false
+    },
+    "RESPONSE_MAX_TOKENS": {
+      "description": "Maximum tokens for the LLM's response.",
+      "value": "4096",
+      "required": false
+    },
+    "REQUEST_TIMEOUT": {
+      "description": "Timeout in seconds for API requests.",
+      "value": "60",
+      "required": false
+    },
+    "TRANSCRIPT_LANGUAGES": {
+      "description": "Comma-separated list of preferred transcript languages (e.g., 'en,en-US').",
+      "value": "en,en-US,en-GB",
+      "required": false
+    },
+    "LOG_LEVEL": {
+      "description": "Logging level for the application (e.g., 'INFO', 'DEBUG', 'WARNING').",
+      "value": "INFO",
+      "required": false
+    }
+  }
+}

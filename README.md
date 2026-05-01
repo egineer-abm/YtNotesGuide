@@ -1,3 +1,12 @@
+---
+title: YouTube to Notion Guide Generator
+emoji: "📚"
+colorFrom: "purple"
+colorTo: "blue"
+sdk: streamlit
+app_file: frontend/app.py
+---
+
 # YouTube to Notion Guide Generator
 
 Turn YouTube videos into organized Notion study notes, implementation guides, and action-ready reference pages.
@@ -221,6 +230,30 @@ Open:
 ```text
 http://localhost:8501
 ```
+
+## Deploy on Render
+
+This repo includes a Render Blueprint in `render.yaml`. It deploys two web services:
+
+- `yt-video-guides-backend`: FastAPI API served with Uvicorn
+- `yt-video-guides-frontend`: Streamlit UI served on Render's assigned `$PORT`
+
+Deploy steps:
+
+1. Push this repository to GitHub or GitLab.
+2. In Render, choose `New` -> `Blueprint`.
+3. Select the repository and let Render read `render.yaml`.
+4. Enter the secret values Render prompts for:
+   - `NOTION_API_KEY`
+   - `OPENROUTER_API_KEY` if using OpenRouter
+   - `GEMINI_API_KEY` if using Gemini
+   - `NOTION_DATABASE_ID` if you already have a database
+5. Create the Blueprint.
+6. Open the frontend service URL when both services are live.
+
+The frontend receives `BACKEND_URL` from the backend service's private `hostport`, so browser users only need the Streamlit frontend URL. The backend health endpoint is `/health`, which Render uses for service checks.
+
+If you rename the Render services, update `render.yaml` so the frontend `BACKEND_URL.fromService.name` still matches the backend service name.
 
 ## How To Use The App
 
