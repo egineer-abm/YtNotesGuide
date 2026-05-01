@@ -1,0 +1,25 @@
+# Core Framework
+fastapi
+uvicorn
+streamlit
+
+# YouTube
+yt-dlp
+youtube-transcript-api
+
+# LLM
+requests
+
+# Notion
+notion-client
+
+# Data Validation & Settings
+pydantic
+pydantic-settings
+
+# Token Counting
+tiktoken
+
+# Environment & HTTP
+python-dotenv
+httpx
