@@ -37,6 +37,18 @@ services:
         value: 4096
       - key: REQUEST_TIMEOUT
         value: 60
+      - key: YOUTUBE_SLEEP_INTERVAL
+        value: 6
+      - key: YOUTUBE_MAX_SLEEP_INTERVAL
+        value: 12
+      - key: YOUTUBE_PLAYER_CLIENTS
+        value: default
+      - key: YOUTUBE_COOKIES_FILE
+        sync: false
+      - key: YOUTUBE_COOKIES
+        sync: false
+      - key: YOUTUBE_COOKIES_B64
+        sync: false
       - key: TRANSCRIPT_LANGUAGES
         value: en,en-US,en-GB
       - key: LOG_LEVEL

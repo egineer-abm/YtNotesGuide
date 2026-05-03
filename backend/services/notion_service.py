@@ -233,8 +233,8 @@ class NotionService:
             blocks.append({
                 "type": "callout",
                 "callout": {
-                    "rich_text": [{"text": {"content": f"🎬 Watch Video: {video_url}"}}],
-                    "icon": {"emoji": "📺"},
+                    "rich_text": [{"text": {"content": f"Watch Video: {video_url}"}}],
+                    "icon": {"emoji": "▶️"},
                     "color": "blue_background"
                 }
             })
@@ -252,20 +252,20 @@ class NotionService:
         blocks.append(self._divider())
         
         # Big Idea section
-        blocks.append(self._heading1("💡 Big Idea"))
+        blocks.append(self._heading1("Big Idea"))
         blocks.append(self._paragraph(guide.big_idea))
         blocks.append(self._divider())
         
         # Key Timestamps section (if available)
         if guide.key_timestamps:
-            blocks.append(self._heading2("⏱️ Key Timestamps"))
+            blocks.append(self._heading2("Key Timestamps"))
             for timestamp in guide.key_timestamps:
                 blocks.append(self._bullet(timestamp))
             blocks.append(self._divider())
         
         # Tools & Apps section
         if guide.tools_and_apps:
-            blocks.append(self._heading2("🛠️ Tools & Apps Used"))
+            blocks.append(self._heading2("Tools & Apps Used"))
             for tool in guide.tools_and_apps:
                 tool_text = f"**{tool.name}** - {tool.purpose}"
                 if tool.url:
@@ -274,18 +274,18 @@ class NotionService:
             blocks.append(self._divider())
         
         # Key Terms section
-        blocks.append(self._heading2("📚 Key Terms"))
+        blocks.append(self._heading2("Key Terms"))
         for term in guide.key_terms:
             blocks.append(self._bullet(term))
         blocks.append(self._divider())
         
         # Apply in 5 Minutes section
-        blocks.append(self._heading2("⚡ Apply in 5 Minutes"))
+        blocks.append(self._heading2("Apply in 5 Minutes"))
         blocks.append({
             "type": "callout",
             "callout": {
                 "rich_text": [{"text": {"content": "Quick wins you can do RIGHT NOW:"}}],
-                "icon": {"emoji": "🚀"},
+                "icon": {"emoji": "✅"},
                 "color": "green_background"
             }
         })
@@ -294,14 +294,14 @@ class NotionService:
         blocks.append(self._divider())
         
         # Implementation Steps section
-        blocks.append(self._heading2("📋 Step-by-Step Implementation"))
+        blocks.append(self._heading2("Step-by-Step Implementation"))
         for i, step in enumerate(guide.implementation_steps, 1):
             blocks.append(self._numbered(step))
         blocks.append(self._divider())
         
         # Code Examples section
         if guide.code_snippets:
-            blocks.append(self._heading2("💻 Code Examples"))
+            blocks.append(self._heading2("Code Examples"))
             
             for snippet in guide.code_snippets:
                 # Language header with description
@@ -321,9 +321,9 @@ class NotionService:
                 
                 # Source indicator
                 source_text = (
-                    "📝 Extracted from video (verbatim)" 
+                    "Extracted from video (verbatim)" 
                     if snippet.explicit_or_suggested == CodeSnippetType.EXPLICIT 
-                    else "💡 Suggested example code"
+                    else "Suggested example code"
                 )
                 blocks.append({
                     "type": "callout",
@@ -337,7 +337,7 @@ class NotionService:
         # Resources section
         if guide.resources:
             blocks.append(self._divider())
-            blocks.append(self._heading2("🔗 Resources & Links"))
+            blocks.append(self._heading2("Resources & Links"))
             for resource in guide.resources:
                 blocks.append(self._bullet(resource))
         

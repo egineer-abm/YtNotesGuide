@@ -255,6 +255,7 @@ async def discover_videos(request: DiscoverVideosRequest):
     Discover latest channel videos or inspect a single YouTube video input.
     """
     from backend.services import YouTubeService
+    from backend.services.youtube_service import YouTubeAuthenticationError
 
     youtube = YouTubeService()
 
@@ -282,6 +283,9 @@ async def discover_videos(request: DiscoverVideosRequest):
             videos=videos,
             message=f"Fetched {len(videos)} latest videos for {channel_info.channel_name}.",
         )
+    except YouTubeAuthenticationError as e:
+        logger.warning(f"YouTube authentication required for {request.source_input}: {e}")
+        raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Failed to discover videos for {request.source_input}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -293,6 +297,7 @@ async def process_videos(request: ProcessVideosRequest):
     Process selected videos from a channel or a direct video URL.
     """
     from backend.services import YouTubeService, NotionService, StorageService, create_llm_service
+    from backend.services.youtube_service import YouTubeAuthenticationError
     import time
 
     start_time = time.time()
@@ -347,6 +352,9 @@ async def process_videos(request: ProcessVideosRequest):
 
     except HTTPException:
         raise
+    except YouTubeAuthenticationError as e:
+        logger.warning(f"YouTube authentication required for {request.source_input}: {e}")
+        raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Failed to process source {request.source_input}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -411,6 +419,7 @@ async def setup_notion_database(request: NotionSetupRequest):
 async def test_youtube(source_input: str):
     """Test YouTube discovery with a channel or video input."""
     from backend.services import YouTubeService
+    from backend.services.youtube_service import YouTubeAuthenticationError
     
     try:
         youtube = YouTubeService()
@@ -433,6 +442,8 @@ async def test_youtube(source_input: str):
             "videos": [v.model_dump() for v in videos]
         }
     except Exception as e:
+        if isinstance(e, YouTubeAuthenticationError):
+            raise HTTPException(status_code=503, detail=str(e)) from e
         raise HTTPException(status_code=500, detail=str(e))
 
 

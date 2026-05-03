@@ -185,6 +185,16 @@ MAX_TOKENS_PER_CHUNK=30000
 RESPONSE_MAX_TOKENS=4096
 REQUEST_TIMEOUT=60
 
+# YouTube authentication/rate limiting
+# Required when YouTube returns "Sign in to confirm you're not a bot".
+YOUTUBE_COOKIES_FILE=
+YOUTUBE_COOKIES=
+YOUTUBE_COOKIES_B64=
+YOUTUBE_COOKIES_FROM_BROWSER=
+YOUTUBE_SLEEP_INTERVAL=6
+YOUTUBE_MAX_SLEEP_INTERVAL=12
+YOUTUBE_PLAYER_CLIENTS=default
+
 # Local services
 BACKEND_HOST=0.0.0.0
 BACKEND_PORT=8000
@@ -364,6 +374,17 @@ This schema keeps the Notion output consistent even when you switch between Open
 - Some videos do not expose captions or transcripts.
 - Try a different video from the same channel.
 - Check whether the video has captions available on YouTube.
+
+### YouTube Requires Sign In / Bot Confirmation
+
+- Update dependencies so the backend uses the pinned `yt-dlp==2026.3.17` or newer.
+- For local development, set `YOUTUBE_COOKIES_FROM_BROWSER=chrome` or another supported browser after signing in to YouTube in that browser.
+- For production, export YouTube cookies in Netscape format and configure one of:
+  - `YOUTUBE_COOKIES_FILE=/path/to/cookies.txt`
+  - `YOUTUBE_COOKIES_B64=<base64 encoded cookies.txt>`
+  - `YOUTUBE_COOKIES=<raw cookies.txt content>`
+- Keep `YOUTUBE_SLEEP_INTERVAL` at 5-10 seconds or higher for hosted deployments. YouTube may rate-limit or bot-check aggressive request patterns.
+- Leave `YOUTUBE_PLAYER_CLIENTS=default` unless yt-dlp's YouTube extractor docs suggest a specific client for your current failure.
 
 ### Notion API Error
 

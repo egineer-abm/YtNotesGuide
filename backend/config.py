@@ -114,6 +114,42 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("transcript_languages", "TRANSCRIPT_LANGUAGES")
     )
     
+    # YouTube Authentication
+    youtube_cookies_file: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("youtube_cookies_file", "YOUTUBE_COOKIES_FILE")
+    )
+    youtube_cookies: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("youtube_cookies", "YOUTUBE_COOKIES")
+    )
+    youtube_cookies_b64: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("youtube_cookies_b64", "YOUTUBE_COOKIES_B64")
+    )
+    youtube_cookies_from_browser: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("youtube_cookies_from_browser", "YOUTUBE_COOKIES_FROM_BROWSER")
+    )
+    youtube_sleep_interval: float = Field(
+        default=6.0,
+        ge=0.0,
+        validation_alias=AliasChoices("youtube_sleep_interval", "YOUTUBE_SLEEP_INTERVAL")
+    )
+    youtube_max_sleep_interval: float = Field(
+        default=12.0,
+        ge=0.0,
+        validation_alias=AliasChoices("youtube_max_sleep_interval", "YOUTUBE_MAX_SLEEP_INTERVAL")
+    )
+    youtube_player_clients: str = Field(
+        default="default",
+        validation_alias=AliasChoices("youtube_player_clients", "YOUTUBE_PLAYER_CLIENTS")
+    )
+    youtube_visitor_data: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("youtube_visitor_data", "YOUTUBE_VISITOR_DATA")
+    )
+    
     # Logging
     log_level: str = Field(
         default="INFO",
@@ -124,6 +160,15 @@ class Settings(BaseSettings):
     def transcript_language_list(self) -> list[str]:
         """Parse transcript languages into a list."""
         return [lang.strip() for lang in self.transcript_languages.split(",")]
+
+    @property
+    def youtube_player_client_list(self) -> list[str]:
+        """Parse optional yt-dlp YouTube player clients."""
+        return [
+            client.strip()
+            for client in self.youtube_player_clients.split(",")
+            if client.strip() and client.strip().lower() != "default"
+        ]
 
 
 @lru_cache

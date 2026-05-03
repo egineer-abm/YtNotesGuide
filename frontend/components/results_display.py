@@ -96,13 +96,13 @@ def render_video_result(result: dict):
     
     # Status indicator
     if status == 'success':
-        icon = "✅"
+        icon = "Success:"
         color = "green"
     elif status == 'failed':
-        icon = "❌"
+        icon = "Failed:"
         color = "red"
     else:  # skipped
-        icon = "⏭️"
+        icon = "Skipped:"
         color = "orange"
     
     # Result card

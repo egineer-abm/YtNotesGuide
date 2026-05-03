@@ -7,7 +7,9 @@ import json
 import os
 import re
 import tempfile
+from base64 import b64decode
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
@@ -22,19 +24,147 @@ logger = get_logger(__name__)
 settings = get_settings()
 
 
+class YouTubeAuthenticationError(RuntimeError):
+    """Raised when YouTube requires cookies or another authenticated client signal."""
+
+
 class YouTubeService:
     """Service for interacting with YouTube content."""
 
     VIDEO_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{11}$")
+    AUTH_ERROR_MARKERS = (
+        "sign in to confirm",
+        "not a bot",
+        "captcha",
+        "cookies",
+        "login required",
+    )
     
     def __init__(self):
         """Initialize YouTube service with yt-dlp options."""
+        self._generated_cookie_file: Optional[str] = None
+        self.auth_ydl_opts = self._build_auth_options()
+
         self.ydl_opts = {
             "quiet": True,
             "no_warnings": True,
+            "noprogress": True,
             "extract_flat": True,
-            "ignoreerrors": True,
+            **self.auth_ydl_opts,
         }
+
+        if settings.youtube_sleep_interval:
+            self.ydl_opts["sleep_interval_requests"] = settings.youtube_sleep_interval
+            self.ydl_opts["sleep_interval"] = settings.youtube_sleep_interval
+        if settings.youtube_max_sleep_interval:
+            self.ydl_opts["max_sleep_interval"] = settings.youtube_max_sleep_interval
+
+        extractor_args = self._build_extractor_args()
+        if extractor_args:
+            self.ydl_opts["extractor_args"] = extractor_args
+
+    def _build_auth_options(self) -> dict:
+        """Build yt-dlp authentication options from settings."""
+        opts = {}
+
+        cookiefile = self._resolve_cookie_file()
+        if cookiefile:
+            opts["cookiefile"] = cookiefile
+        elif settings.youtube_cookies_from_browser:
+            opts["cookiesfrombrowser"] = self._parse_browser_cookie_setting(
+                settings.youtube_cookies_from_browser
+            )
+
+        return opts
+
+    def _resolve_cookie_file(self) -> Optional[str]:
+        """Resolve configured cookie file or materialize cookie content from env."""
+        if settings.youtube_cookies_file:
+            cookie_path = Path(settings.youtube_cookies_file).expanduser()
+            if not cookie_path.is_absolute():
+                cookie_path = Path.cwd() / cookie_path
+            if not cookie_path.exists():
+                logger.warning("Configured YouTube cookie file does not exist: %s", cookie_path)
+            return str(cookie_path)
+
+        cookie_text = settings.youtube_cookies
+        if settings.youtube_cookies_b64:
+            try:
+                cookie_text = b64decode(settings.youtube_cookies_b64).decode("utf-8")
+            except Exception as e:
+                logger.error("Failed to decode YOUTUBE_COOKIES_B64: %s", e)
+                return None
+
+        if not cookie_text:
+            return None
+
+        cookie_text = cookie_text.replace("\\r\\n", "\n").replace("\\n", "\n")
+        first_line = cookie_text.splitlines()[0] if cookie_text.splitlines() else ""
+        if first_line not in {"# HTTP Cookie File", "# Netscape HTTP Cookie File"}:
+            logger.warning(
+                "YOUTUBE_COOKIES should be a Netscape cookie file. First line was: %s",
+                first_line or "<empty>",
+            )
+
+        cookie_file = tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            newline="\n",
+            prefix="youtube-cookies-",
+            suffix=".txt",
+            delete=False,
+        )
+        with cookie_file:
+            cookie_file.write(cookie_text)
+            if not cookie_text.endswith("\n"):
+                cookie_file.write("\n")
+
+        self._generated_cookie_file = cookie_file.name
+        return cookie_file.name
+
+    def _parse_browser_cookie_setting(self, value: str) -> tuple:
+        """
+        Parse yt-dlp's cookies-from-browser setting.
+
+        Supports values such as "chrome", "firefox", or
+        "chrome:Profile 1". Additional colon-separated fields are passed
+        through to yt-dlp for profile/keyring/container use.
+        """
+        return tuple(part.strip() or None for part in value.split(":"))
+
+    def _build_extractor_args(self) -> dict:
+        """Build optional YouTube extractor args supported by yt-dlp."""
+        youtube_args = {}
+        youtubetab_args = {}
+
+        player_clients = settings.youtube_player_client_list
+        if player_clients:
+            youtube_args["player_client"] = player_clients
+
+        if settings.youtube_visitor_data:
+            youtube_args["player_skip"] = ["webpage", "configs"]
+            youtube_args["visitor_data"] = [settings.youtube_visitor_data]
+            youtubetab_args["skip"] = ["webpage"]
+
+        extractor_args = {}
+        if youtube_args:
+            extractor_args["youtube"] = youtube_args
+        if youtubetab_args:
+            extractor_args["youtubetab"] = youtubetab_args
+
+        return extractor_args
+
+    def _raise_if_auth_error(self, error: Exception) -> None:
+        """Turn yt-dlp's bot/cookie failures into an actionable app error."""
+        message = str(error)
+        lowered = message.lower()
+        if any(marker in lowered for marker in self.AUTH_ERROR_MARKERS):
+            raise YouTubeAuthenticationError(
+                "YouTube requires authentication for this request. Configure "
+                "YOUTUBE_COOKIES_FILE, YOUTUBE_COOKIES, YOUTUBE_COOKIES_B64, or "
+                "YOUTUBE_COOKIES_FROM_BROWSER. For deployed production services, "
+                "use an exported Netscape-format cookie file or cookie env secret."
+            ) from error
     
     def extract_channel_id(self, url_or_id: str) -> str:
         """
@@ -195,6 +325,7 @@ class YouTubeService:
                     if uploader_id.startswith('UC'):
                         return uploader_id
         except Exception as e:
+            self._raise_if_auth_error(e)
             logger.error(f"Failed to resolve handle {handle}: {e}")
         
         raise ValueError(f"Could not resolve channel ID for handle: @{handle}")
@@ -220,6 +351,8 @@ class YouTubeService:
         try:
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=False)
+                if not info:
+                    raise ValueError(f"No channel info returned for {channel_id}")
                 
                 return ChannelInfo(
                     channel_id=channel_id,
@@ -228,6 +361,7 @@ class YouTubeService:
                     video_count=info.get('playlist_count'),
                 )
         except Exception as e:
+            self._raise_if_auth_error(e)
             logger.error(f"Failed to get channel info for {channel_id}: {e}")
             # Return basic info
             return ChannelInfo(
@@ -256,6 +390,7 @@ class YouTubeService:
         opts = {
             **self.ydl_opts,
             "extract_flat": "in_playlist",
+            "ignoreerrors": True,
             "playlistend": limit,
         }
         
@@ -277,12 +412,15 @@ class YouTubeService:
                         video_info = self._get_video_info(entry['id'])
                         if video_info:
                             videos.append(video_info)
+                    except YouTubeAuthenticationError:
+                        raise
                     except Exception as e:
                         logger.warning(f"Failed to get info for video {entry.get('id')}: {e}")
 
                 return videos[:limit]
 
         except Exception as e:
+            self._raise_if_auth_error(e)
             logger.error(f"Failed to get latest videos for channel {channel_id}: {e}")
             return []
 
@@ -359,6 +497,7 @@ class YouTubeService:
                     url=url,
                 )
         except Exception as e:
+            self._raise_if_auth_error(e)
             logger.error(f"Failed to get video info for {video_id}: {e}")
             return None
 
@@ -406,13 +545,23 @@ class YouTubeService:
             opts = {
                 "quiet": True,
                 "no_warnings": True,
+                "noprogress": True,
                 "skip_download": True,
                 "writesubtitles": True,
                 "writeautomaticsub": True,
                 "subtitleslangs": languages,
                 "subtitlesformat": "json3",
                 "outtmpl": subtitle_file,
+                **self.auth_ydl_opts,
             }
+
+            extractor_args = self._build_extractor_args()
+            if extractor_args:
+                opts["extractor_args"] = extractor_args
+            if settings.youtube_sleep_interval:
+                opts["sleep_interval_requests"] = settings.youtube_sleep_interval
+            if settings.youtube_max_sleep_interval:
+                opts["max_sleep_interval"] = settings.youtube_max_sleep_interval
             
             try:
                 with yt_dlp.YoutubeDL(opts) as ydl:
@@ -444,6 +593,7 @@ class YouTubeService:
                 return self._get_transcript_from_api(video_id, languages)
                 
             except Exception as e:
+                self._raise_if_auth_error(e)
                 logger.error(f"Failed to get transcript for {video_id}: {e}")
                 fallback_transcript = self._get_transcript_from_api(video_id, languages)
                 if fallback_transcript:
