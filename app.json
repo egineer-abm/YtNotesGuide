@@ -82,36 +82,6 @@
       "value": "60",
       "required": false
     },
-    "YOUTUBE_COOKIES_FILE": {
-      "description": "(Optional) Path to a Netscape-format YouTube cookies.txt file available to the backend.",
-      "value": "",
-      "required": false
-    },
-    "YOUTUBE_COOKIES": {
-      "description": "(Optional) Raw Netscape-format YouTube cookies.txt content. Prefer YOUTUBE_COOKIES_B64 for hosted secret managers.",
-      "value": "",
-      "required": false
-    },
-    "YOUTUBE_COOKIES_B64": {
-      "description": "(Optional) Base64-encoded Netscape-format YouTube cookies.txt content for hosted deployments.",
-      "value": "",
-      "required": false
-    },
-    "YOUTUBE_SLEEP_INTERVAL": {
-      "description": "Seconds to wait between YouTube requests to reduce rate-limit and bot-check pressure.",
-      "value": "6",
-      "required": false
-    },
-    "YOUTUBE_MAX_SLEEP_INTERVAL": {
-      "description": "Maximum randomized wait between YouTube requests.",
-      "value": "12",
-      "required": false
-    },
-    "YOUTUBE_PLAYER_CLIENTS": {
-      "description": "(Optional) Comma-separated yt-dlp YouTube player clients. Leave as default unless troubleshooting PO-token/client issues.",
-      "value": "default",
-      "required": false
-    },
     "TRANSCRIPT_LANGUAGES": {
       "description": "Comma-separated list of preferred transcript languages (e.g., 'en,en-US').",
       "value": "en,en-US,en-GB",

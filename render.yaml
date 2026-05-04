@@ -3,7 +3,7 @@ services:
     name: yt-video-guides-backend
     runtime: python
     plan: free
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && python -m pip install -U opentube
     startCommand: python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
@@ -37,18 +37,6 @@ services:
         value: 4096
       - key: REQUEST_TIMEOUT
         value: 60
-      - key: YOUTUBE_SLEEP_INTERVAL
-        value: 6
-      - key: YOUTUBE_MAX_SLEEP_INTERVAL
-        value: 12
-      - key: YOUTUBE_PLAYER_CLIENTS
-        value: default
-      - key: YOUTUBE_COOKIES_FILE
-        sync: false
-      - key: YOUTUBE_COOKIES
-        sync: false
-      - key: YOUTUBE_COOKIES_B64
-        sync: false
       - key: TRANSCRIPT_LANGUAGES
         value: en,en-US,en-GB
       - key: LOG_LEVEL
@@ -66,7 +54,7 @@ services:
     name: yt-video-guides-frontend
     runtime: python
     plan: free
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && python -m pip install -U opentube
     startCommand: streamlit run frontend/app.py --server.address 0.0.0.0 --server.port $PORT --server.headless true --browser.gatherUsageStats false
     envVars:
       - key: PYTHON_VERSION

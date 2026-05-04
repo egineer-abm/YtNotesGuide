@@ -9,7 +9,7 @@ asgiref>=3.7.0
 werkzeug>=3.0.0
 
 # YouTube
-yt-dlp>=2024.1.0
+opentube>=1.7.4
 youtube-transcript-api>=0.6.2
 
 # LLM

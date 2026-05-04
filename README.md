@@ -81,7 +81,7 @@ flowchart TD
     UI --> API[FastAPI Backend]
 
     API --> YT[YouTube Service]
-    YT --> YTDLP[yt-dlp Metadata]
+    YT --> OpenTube[opentube Metadata]
     YT --> TranscriptAPI[youtube-transcript-api]
 
     API --> LLM[LLM Service Factory]
@@ -105,7 +105,7 @@ flowchart TD
 | Frontend | Streamlit |
 | Backend | FastAPI |
 | Data models | Pydantic |
-| YouTube metadata | yt-dlp |
+| YouTube metadata | opentube |
 | Transcripts | youtube-transcript-api |
 | AI synthesis | OpenRouter or Gemini |
 | Notes database | Notion API |
@@ -185,16 +185,6 @@ MAX_TOKENS_PER_CHUNK=30000
 RESPONSE_MAX_TOKENS=4096
 REQUEST_TIMEOUT=60
 
-# YouTube authentication/rate limiting
-# Required when YouTube returns "Sign in to confirm you're not a bot".
-YOUTUBE_COOKIES_FILE=
-YOUTUBE_COOKIES=
-YOUTUBE_COOKIES_B64=
-YOUTUBE_COOKIES_FROM_BROWSER=
-YOUTUBE_SLEEP_INTERVAL=6
-YOUTUBE_MAX_SLEEP_INTERVAL=12
-YOUTUBE_PLAYER_CLIENTS=default
-
 # Local services
 BACKEND_HOST=0.0.0.0
 BACKEND_PORT=8000
@@ -218,15 +208,20 @@ If no database ID is supplied, the backend attempts to create or reuse the confi
 ## Install
 
 ```bash
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install -U opentube
 ```
+
+When using a virtual environment, run those commands from the activated environment
+so `opentube` is installed into the same Python that runs Uvicorn.
 
 ## Run Locally
 
 Start the backend:
 
 ```bash
-uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Start the frontend in a second terminal:
@@ -375,16 +370,11 @@ This schema keeps the Notion output consistent even when you switch between Open
 - Try a different video from the same channel.
 - Check whether the video has captions available on YouTube.
 
-### YouTube Requires Sign In / Bot Confirmation
+### YouTube Metadata Is Rate Limited
 
-- Update dependencies so the backend uses the pinned `yt-dlp==2026.3.17` or newer.
-- For local development, set `YOUTUBE_COOKIES_FROM_BROWSER=chrome` or another supported browser after signing in to YouTube in that browser.
-- For production, export YouTube cookies in Netscape format and configure one of:
-  - `YOUTUBE_COOKIES_FILE=/path/to/cookies.txt`
-  - `YOUTUBE_COOKIES_B64=<base64 encoded cookies.txt>`
-  - `YOUTUBE_COOKIES=<raw cookies.txt content>`
-- Keep `YOUTUBE_SLEEP_INTERVAL` at 5-10 seconds or higher for hosted deployments. YouTube may rate-limit or bot-check aggressive request patterns.
-- Leave `YOUTUBE_PLAYER_CLIENTS=default` unless yt-dlp's YouTube extractor docs suggest a specific client for your current failure.
+- The backend now uses `opentube` for public YouTube metadata.
+- Retry later if YouTube temporarily rate-limits public metadata or transcript requests.
+- For deployment, the build command also runs `python -m pip install -U opentube` to keep that package current.
 
 ### Notion API Error
 
